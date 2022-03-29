@@ -1,0 +1,9 @@
+### Health Check
+GET http://127.0.0.1:8000/health_check
+
+### Subscribe
+POST http://127.0.0.1:8000/subscriptions
+Content-Type: application/x-www-form-urlencoded
+
+name=odd
+&email=odd@test.com
