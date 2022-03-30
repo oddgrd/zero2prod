@@ -29,10 +29,7 @@ where
 {
     let env_filter =
         EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new(env_filter));
-    let formatting_layer = BunyanFormattingLayer::new(
-        name, // Output the formatted spans to stdout.
-        sink,
-    );
+    let formatting_layer = BunyanFormattingLayer::new(name, sink);
 
     // The `with` method is provided by `SubscriberExt`, an extension
     // trait for `Subscriber` exposed by `tracing_subscriber`
