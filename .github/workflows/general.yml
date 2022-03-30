@@ -19,7 +19,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      SQLX_VERSION: 0.5.5
+      SQLX_VERSION: 0.5.7
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -41,15 +41,16 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      
+
       - name: Cache sqlx-cli
         uses: actions/cache@v2
         id: cache-sqlx
         with:
           path: |
             ~/.cargo/bin/sqlx
+            ~/.cargo/bin/cargo-sqlx
           key: ${{ runner.os }}-sqlx-${{ env.SQLX_VERSION }}-${{ env.SQLX_FEATURES }}
-      
+
       - name: Install sqlx-cli 
         uses: actions-rs/cargo@v1
         if: steps.cache-sqlx.outputs.cache-hit == false
@@ -62,7 +63,7 @@ jobs:
             --features=${{ env.SQLX_FEATURES }}
             --no-default-features
             --locked
-      
+
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
@@ -71,7 +72,7 @@ jobs:
       - name: Check sqlx-data.json is up-to-date
         run: |
           cargo sqlx prepare --check -- --bin zero2prod
-          
+
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
@@ -105,7 +106,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      SQLX_VERSION: 0.5.5
+      SQLX_VERSION: 0.5.7
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -114,8 +115,8 @@ jobs:
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
         with:
-          components: clippy
           toolchain: stable
+          components: clippy
           override: true
 
       - name: Cache sqlx-cli
@@ -163,7 +164,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      SQLX_VERSION: 0.5.5
+      SQLX_VERSION: 0.5.7
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -200,7 +201,7 @@ jobs:
         run: |
           sudo apt-get install libpq-dev -y
           SKIP_DOCKER=true ./scripts/init_db.sh
-          
+
       - name: Run cargo-tarpaulin
         uses: actions-rs/tarpaulin@v0.1
         with:
