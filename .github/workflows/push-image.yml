@@ -1,7 +1,6 @@
-name: Build and publish manually
+name: Build and push image
 
-on:
-  workflow_dispatch:
+on: push
 
 jobs:
   build_and_push:
@@ -26,9 +25,3 @@ jobs:
 
       - name: Push image to DO Container Registry
         run: docker push registry.digitalocean.com/oddgrd/zero2prod:latest
-
-      - name: DigitalOcean App Platform deployment
-        uses: digitalocean/app_action@main
-        with:
-          app_name: zero2prod
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
