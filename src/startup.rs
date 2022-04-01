@@ -10,7 +10,6 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     // Wrap the connection in a thread-safe reference counting pointer (Arc)
     let db_pool = web::Data::new(db_pool);
 
-    // Capture `connection` from the surrounding environment
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())

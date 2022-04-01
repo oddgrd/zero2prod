@@ -25,28 +25,27 @@ services:
     routes:
       - path: /
     envs:
+      - key: APP_APPLICATION__BASE_URL
+        scope: RUN_TIME
+        value: ${APP_URL}
       - key: APP_DATABASE__USERNAME
         scope: RUN_TIME
-        value: ${newsletter.USERNAME}
+        value: ${db.USERNAME}
       - key: APP_DATABASE__PASSWORD
         scope: RUN_TIME
-        value: ${newsletter.PASSWORD}
+        value: ${db.PASSWORD}
       - key: APP_DATABASE__HOST
         scope: RUN_TIME
-        value: ${newsletter.HOSTNAME}
+        value: ${db.HOSTNAME}
       - key: APP_DATABASE__PORT
         scope: RUN_TIME
-        value: ${newsletter.PORT}
+        value: ${db.PORT}
       - key: APP_DATABASE__DATABASE_NAME
         scope: RUN_TIME
-        value: ${newsletter.DATABASE}
+        value: ${db.DATABASE}
 databases:
-  # PG = Postgres
   - engine: PG
-    # Database name
-    name: newsletter
-    # Again, let's keep the bill lean
+    name: db
     num_nodes: 1
     size: db-s-dev-database
-    # Postgres version - using the latest here
     version: "12"
