@@ -6,9 +6,10 @@ services:
     dockerfile_path: Dockerfile
     source_dir: .
     # Build image separately and tell DO to use it here, to avoid OOM error
-    image:
-      registry_type: DOCR
-      repository: zero2prod
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: oddgrd/zero2prod
     # Active probe used by DigitalOcean's to ensure our application is healthy
     health_check:
     # The path to our health check endpoint!
@@ -30,22 +31,22 @@ services:
         value: ${APP_URL}
       - key: APP_DATABASE__USERNAME
         scope: RUN_TIME
-        value: ${db.USERNAME}
+        value: ${newsletter.USERNAME}
       - key: APP_DATABASE__PASSWORD
         scope: RUN_TIME
-        value: ${db.PASSWORD}
+        value: ${newsletter.PASSWORD}
       - key: APP_DATABASE__HOST
         scope: RUN_TIME
-        value: ${db.HOSTNAME}
+        value: ${newsletter.HOSTNAME}
       - key: APP_DATABASE__PORT
         scope: RUN_TIME
-        value: ${db.PORT}
+        value: ${newsletter.PORT}
       - key: APP_DATABASE__DATABASE_NAME
         scope: RUN_TIME
-        value: ${db.DATABASE}
+        value: ${newsletter.DATABASE}
 databases:
   - engine: PG
-    name: db
+    name: newsletter
     num_nodes: 1
     size: db-s-dev-database
     version: "12"
