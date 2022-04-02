@@ -6,10 +6,9 @@ services:
     dockerfile_path: Dockerfile
     source_dir: .
     # Build image separately and tell DO to use it here, to avoid OOM error
-    github:
-      branch: main
-      deploy_on_push: true
-      repo: oddgrd/zero2prod
+    image:
+      registry_type: DOCR
+      repository: zero2prod
     # Active probe used by DigitalOcean's to ensure our application is healthy
     health_check:
     # The path to our health check endpoint!
