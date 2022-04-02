@@ -4,7 +4,7 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
-use crate::routes::{health_check, subscriptions};
+use crate::routes::{health_check, subscribe};
 
 pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Error> {
     // Wrap the connection in a thread-safe reference counting pointer (Arc)
@@ -13,8 +13,8 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
     let server = HttpServer::new(move || {
         App::new()
             .wrap(TracingLogger::default())
-            .service(health_check::health_check)
-            .service(subscriptions::subscribe)
+            .service(health_check)
+            .service(subscribe)
             .app_data(db_pool.clone())
     })
     .listen(listener)?
