@@ -2,8 +2,8 @@
 GET http://127.0.0.1:8000/health_check
 
 ### Subscribe
-POST http://127.0.0.1:8000/subscriptions
+POST https://zero2prod-jf74b.ondigitalocean.app/subscriptions
 Content-Type: application/x-www-form-urlencoded
 
 name=odd
-&email=odd@test.com
+&email=odd@testss.com
