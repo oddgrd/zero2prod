@@ -38,7 +38,7 @@ impl EmailClient {
 
     pub async fn send_email<'a>(
         &self,
-        recipient: SubscriberEmail,
+        recipient: &SubscriberEmail,
         subject: &'a str,
         html_body: &'a str,
         text_body: &'a str,
@@ -53,7 +53,7 @@ impl EmailClient {
         };
 
         self.http_client
-            .post(url.as_str())
+            .post(dbg!(url.as_str()))
             .header(
                 "X-Postmark-Server-Token",
                 self.authorization_token.expose_secret(),
@@ -143,7 +143,7 @@ mod tests {
 
         // Act
         let _ = email_client(mock_server.uri())
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert
@@ -168,7 +168,7 @@ mod tests {
 
         // Act
         let outcome = email_client(mock_server.uri())
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert
@@ -189,7 +189,7 @@ mod tests {
 
         // Act
         let outcome = email_client(mock_server.uri())
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert
@@ -213,7 +213,7 @@ mod tests {
 
         // Act
         let outcome = email_client(mock_server.uri())
-            .send_email(email(), &subject(), &content(), &content())
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert
