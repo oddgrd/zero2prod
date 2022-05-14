@@ -1,11 +1,11 @@
 use crate::domain::SubscriberEmail;
-use reqwest::{Client, Url};
+use reqwest::Client;
 use secrecy::{ExposeSecret, Secret};
 
 #[derive(Debug)]
 pub struct EmailClient {
     http_client: Client,
-    base_url: Url,
+    base_url: String,
     sender: SubscriberEmail,
     authorization_token: Secret<String>,
 }
@@ -22,7 +22,7 @@ struct SendEmailRequest<'a> {
 
 impl EmailClient {
     pub fn new(
-        base_url: Url,
+        base_url: String,
         sender: SubscriberEmail,
         authorization_token: Secret<String>,
         timeout: std::time::Duration,
@@ -43,11 +43,7 @@ impl EmailClient {
         html_body: &'a str,
         text_body: &'a str,
     ) -> Result<(), reqwest::Error> {
-        let url = self
-            .base_url
-            .join("/email")
-            .expect("Failed to parse email URL");
-
+        let url = format!("{}/email", self.base_url);
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
@@ -100,7 +96,7 @@ mod tests {
     }
 
     /// Get a test instance of `EmailClient`.
-    fn email_client(base_url: reqwest::Url) -> EmailClient {
+    fn email_client(base_url: String) -> EmailClient {
         EmailClient::new(
             base_url,
             email(),
@@ -116,7 +112,6 @@ mod tests {
             let result: Result<serde_json::Value, _> = serde_json::from_slice(&request.body);
 
             if let Ok(body) = result {
-                dbg!(&body);
                 // Check that all the mandatory fields are populated
                 // without inspecting the field values
                 body.get("From").is_some()
@@ -135,7 +130,6 @@ mod tests {
     async fn send_email_sends_the_expected_request() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let base_url = reqwest::Url::parse(&mock_server.uri()).unwrap();
 
         Mock::given(header_exists("X-Postmark-Server-Token"))
             .and(header("Content-Type", "application/json"))
@@ -148,7 +142,7 @@ mod tests {
             .await;
 
         // Act
-        let _ = email_client(base_url)
+        let _ = email_client(mock_server.uri())
             .send_email(email(), &subject(), &content(), &content())
             .await;
 
@@ -160,7 +154,6 @@ mod tests {
     async fn send_email_succeeds_if_the_server_returns_200() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let base_url = reqwest::Url::parse(&mock_server.uri()).unwrap();
 
         // We do not copy in all the matchers we have in the other test.
         // The purpose of this test is not to assert on the request we
@@ -174,7 +167,7 @@ mod tests {
             .await;
 
         // Act
-        let outcome = email_client(base_url)
+        let outcome = email_client(mock_server.uri())
             .send_email(email(), &subject(), &content(), &content())
             .await;
 
@@ -186,7 +179,6 @@ mod tests {
     async fn send_email_fails_if_the_server_returns_500() {
         // Arrange
         let mock_server = MockServer::start().await;
-        let base_url = reqwest::Url::parse(&mock_server.uri()).unwrap();
 
         Mock::given(any())
             // Not a 200 anymore!
@@ -196,7 +188,7 @@ mod tests {
             .await;
 
         // Act
-        let outcome = email_client(base_url)
+        let outcome = email_client(mock_server.uri())
             .send_email(email(), &subject(), &content(), &content())
             .await;
 
@@ -207,9 +199,7 @@ mod tests {
     #[tokio::test]
     async fn send_email_times_out_if_the_server_takes_too_long() {
         // Arrange
-        // Arrange
         let mock_server = MockServer::start().await;
-        let base_url = reqwest::Url::parse(&mock_server.uri()).unwrap();
 
         let response = ResponseTemplate::new(200)
             // 3 minutes!
@@ -222,7 +212,7 @@ mod tests {
             .await;
 
         // Act
-        let outcome = email_client(base_url)
+        let outcome = email_client(mock_server.uri())
             .send_email(email(), &subject(), &content(), &content())
             .await;
 
