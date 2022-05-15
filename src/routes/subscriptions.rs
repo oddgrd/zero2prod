@@ -1,16 +1,13 @@
-use actix_web::{post, web, HttpResponse};
-use chrono::Utc;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
-use serde::Deserialize;
-use sqlx::{PgPool, Postgres, Transaction};
-use uuid::Uuid;
-
 use crate::{
-    domain::{NewSubscriber, SubscriberEmail, SubscriberName},
+    domain::{NewSubscriber, SubscriberEmail, SubscriberName, SubscriptionToken},
     email_client::EmailClient,
     startup::ApplicationBaseUrl,
 };
+use actix_web::{post, web, HttpResponse};
+use chrono::Utc;
+use serde::Deserialize;
+use sqlx::{PgPool, Postgres, Transaction};
+use uuid::Uuid;
 
 #[derive(Deserialize)]
 pub struct FormData {
@@ -26,15 +23,6 @@ impl TryFrom<FormData> for NewSubscriber {
         let email = SubscriberEmail::parse(form.email)?;
         Ok(Self { name, email })
     }
-}
-
-/// Generate a random 25-characters-long case-sensitive subscription token.
-fn generate_subscription_token() -> String {
-    let mut rng = thread_rng();
-    std::iter::repeat_with(|| rng.sample(Alphanumeric))
-        .map(char::from)
-        .take(25)
-        .collect()
 }
 
 #[tracing::instrument(
@@ -66,7 +54,8 @@ pub async fn subscribe(
         Ok(id) => id,
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
-    let subscription_token = generate_subscription_token();
+
+    let subscription_token = SubscriptionToken::generate();
 
     if store_token(&mut transaction, subscriber_id, &subscription_token)
         .await
@@ -102,11 +91,12 @@ pub async fn send_confirmation_email(
     email_client: &EmailClient,
     new_subscriber: NewSubscriber,
     base_url: &str,
-    subscription_token: &str,
+    subscription_token: &SubscriptionToken,
 ) -> Result<(), reqwest::Error> {
     let confirmation_link = format!(
         "{}/subscriptions/confirm?subscription_token={}",
-        base_url, subscription_token
+        base_url,
+        subscription_token.as_ref()
     );
     let plain_body = format!(
         "Welcome to our newsletter!\nVisit {} to confirm your subscription.",
@@ -157,7 +147,7 @@ async fn insert_subscriber(
 async fn store_token(
     transaction: &mut Transaction<'_, Postgres>,
     subscriber_id: Uuid,
-    subscription_token: &str,
+    subscription_token: &SubscriptionToken,
 ) -> Result<(), sqlx::Error> {
     sqlx::query!(
         r#"
@@ -165,7 +155,7 @@ async fn store_token(
     VALUES ($1, $2)
         "#,
         subscriber_id,
-        subscription_token,
+        subscription_token.as_ref(),
     )
     .execute(transaction)
     .await

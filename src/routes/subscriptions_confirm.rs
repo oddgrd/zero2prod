@@ -1,3 +1,4 @@
+use crate::domain::SubscriptionToken;
 use actix_web::{get, web, HttpResponse};
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -8,14 +9,27 @@ pub struct Parameters {
     subscription_token: String,
 }
 
+impl TryFrom<Parameters> for SubscriptionToken {
+    type Error = String;
+
+    fn try_from(params: Parameters) -> Result<Self, Self::Error> {
+        let token = SubscriptionToken::parse(params.subscription_token)?;
+        Ok(token)
+    }
+}
+
 #[tracing::instrument(name = "Confirming a pending subscriber", skip(pool, parameters))]
 #[get("/subscriptions/confirm")]
 pub async fn confirm(pool: web::Data<PgPool>, parameters: web::Query<Parameters>) -> HttpResponse {
-    let subscriber_id =
-        match get_subscriber_id_from_token(&pool, &parameters.subscription_token).await {
-            Ok(subscriber_id) => subscriber_id,
-            Err(_) => return HttpResponse::InternalServerError().finish(),
-        };
+    let subscription_token: SubscriptionToken = match parameters.0.try_into() {
+        Ok(token) => token,
+        Err(_) => return HttpResponse::BadRequest().finish(),
+    };
+
+    let subscriber_id = match get_subscriber_id_from_token(&pool, subscription_token).await {
+        Ok(subscriber_id) => subscriber_id,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
 
     match subscriber_id {
         None => HttpResponse::Unauthorized().finish(),
@@ -49,7 +63,7 @@ pub async fn confirm_subscriber(pool: &PgPool, subscriber_id: Uuid) -> Result<()
 )]
 pub async fn get_subscriber_id_from_token(
     pool: &PgPool,
-    subscription_token: &str,
+    subscription_token: SubscriptionToken,
 ) -> Result<Option<Uuid>, sqlx::Error> {
     let result = sqlx::query!(
         r#"
@@ -57,7 +71,7 @@ pub async fn get_subscriber_id_from_token(
     FROM subscription_tokens
     WHERE subscription_token = $1
         "#,
-        subscription_token
+        subscription_token.as_ref()
     )
     .fetch_optional(pool)
     .await
