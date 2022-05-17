@@ -10,7 +10,7 @@ impl SubscriptionToken {
         let contains_forbidden_characters = s.chars().all(|char| !char.is_ascii_alphanumeric());
 
         if is_incorrect_length || contains_forbidden_characters {
-            Err(format!("{} is not a valid subscription token.", s))
+            Err("Invalid token.".to_string())
         } else {
             Ok(Self(s))
         }

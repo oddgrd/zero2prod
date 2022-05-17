@@ -1,5 +1,6 @@
 use wiremock::matchers::{method, path};
 use wiremock::{Mock, ResponseTemplate};
+use zero2prod::domain::SubscriptionToken;
 
 use crate::helpers::spawn_app;
 
@@ -90,4 +91,48 @@ async fn clicking_on_the_confirmation_link_confirms_a_subscriber() {
     assert_eq!(saved.email, "ursula_le_guin@gmail.com");
     assert_eq!(saved.name, "le guin");
     assert_eq!(saved.status, "confirmed");
+}
+
+#[tokio::test]
+async fn confirm_subscription_fails_if_there_is_a_fatal_database_error() {
+    // Arrange
+    let app = spawn_app().await;
+    let token = SubscriptionToken::generate();
+
+    // Sabotage the database
+    sqlx::query!("ALTER TABLE subscription_tokens DROP COLUMN subscription_token;",)
+        .execute(&app.db_pool)
+        .await
+        .unwrap();
+
+    // Act
+    let response = reqwest::get(&format!(
+        "{}/subscriptions/confirm?subscription_token={}",
+        app.address,
+        token.as_ref()
+    ))
+    .await
+    .unwrap();
+
+    // Assert
+    assert_eq!(response.status().as_u16(), 500);
+}
+
+#[tokio::test]
+async fn confirm_subscription_returns_a_401_if_token_is_not_associated_with_a_user() {
+    // Arrange
+    let app = spawn_app().await;
+    let token = SubscriptionToken::generate();
+
+    // Act
+    let response = reqwest::get(&format!(
+        "{}/subscriptions/confirm?subscription_token={}",
+        app.address,
+        token.as_ref()
+    ))
+    .await
+    .unwrap();
+
+    // Assert
+    assert_eq!(response.status().as_u16(), 401);
 }
