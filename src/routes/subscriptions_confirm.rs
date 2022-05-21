@@ -1,12 +1,11 @@
 use crate::domain::SubscriptionToken;
+use crate::routes::subscriptions::error_chain_fmt;
 use actix_web::http::StatusCode;
 use actix_web::{get, web, HttpResponse, ResponseError};
 use anyhow::Context;
 use serde::Deserialize;
 use sqlx::PgPool;
 use uuid::Uuid;
-
-use super::error_chain_fmt;
 
 #[derive(thiserror::Error)]
 pub enum ConfirmationError {

@@ -53,7 +53,7 @@ impl EmailClient {
         };
 
         self.http_client
-            .post(dbg!(url.as_str()))
+            .post(url.as_str())
             .header(
                 "X-Postmark-Server-Token",
                 self.authorization_token.expose_secret(),

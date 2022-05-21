@@ -13,6 +13,13 @@ impl SubscriberEmail {
     }
 }
 
+impl std::fmt::Display for SubscriberEmail {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // We just forward to the Display implementation of
+        // the wrapped String.
+        self.0.fmt(f)
+    }
+}
 impl AsRef<str> for SubscriberEmail {
     // The caller gets a shared reference to the inner string.
     // This gives the caller **read-only** access,
