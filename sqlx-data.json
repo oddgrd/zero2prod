@@ -65,6 +65,32 @@
     },
     "query": "\n    SELECT subscriber_id \n    FROM subscription_tokens\n    WHERE subscription_token = $1\n        "
   },
+  "d1fb3c51742d56cae7a82c6c3d186c2c1bc422f31f31c53a9280b87ee0474183": {
+    "describe": {
+      "columns": [
+        {
+          "name": "user_id",
+          "ordinal": 0,
+          "type_info": "Uuid"
+        },
+        {
+          "name": "password_hash",
+          "ordinal": 1,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false,
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Text"
+        ]
+      }
+    },
+    "query": "\nSELECT user_id, password_hash\nFROM users\nWHERE username = $1\n"
+  },
   "e1885a7de08d6611f316b6b9d7faa1d38c6cee690ed8f119b455f63f855bc288": {
     "describe": {
       "columns": [],
