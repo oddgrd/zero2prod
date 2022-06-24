@@ -1,5 +1,25 @@
 {
   "db": "PostgreSQL",
+  "0564db5971613829c94c4711204938c3172422560cb28fbad7a40d992760be7e": {
+    "describe": {
+      "columns": [
+        {
+          "name": "username",
+          "ordinal": 0,
+          "type_info": "Text"
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      }
+    },
+    "query": "\nSELECT username\nFROM users\nWHERE user_id = $1\n"
+  },
   "92d1430cbd64c1424560b061cb2cb395369617b1e72bc6e86e7f1cd987748491": {
     "describe": {
       "columns": [

@@ -18,8 +18,12 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.6.0
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -106,7 +110,7 @@ jobs:
         ports:
           - 5432:5432
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.6.0
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
@@ -163,8 +167,12 @@ jobs:
           POSTGRES_DB: postgres
         ports:
           - 5432:5432
+      redis:
+        image: redis:6
+        ports:
+          - 6379:6379
     env:
-      SQLX_VERSION: 0.5.7
+      SQLX_VERSION: 0.6.0
       SQLX_FEATURES: postgres
     steps:
       - name: Checkout repository
