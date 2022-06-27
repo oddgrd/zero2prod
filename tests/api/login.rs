@@ -28,6 +28,7 @@ async fn an_error_flash_message_is_set_on_failure() {
 async fn redirect_to_admin_dashboard_after_login_success() {
     // Arrange
     let app = spawn_app().await;
+
     // Act
     let login_body = serde_json::json!({
     "username": &app.test_user.username,
@@ -35,7 +36,8 @@ async fn redirect_to_admin_dashboard_after_login_success() {
     });
     let response = app.post_login(&login_body).await;
     assert_is_redirect_to(&response, "/admin/dashboard");
+
     // Act
-    let html_page = app.get_admin_dashboard().await;
+    let html_page = app.get_admin_dashboard_html().await;
     assert!(html_page.contains(&format!("Welcome {}", app.test_user.username)));
 }

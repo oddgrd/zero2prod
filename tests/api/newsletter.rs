@@ -183,7 +183,7 @@ async fn create_unconfirmed_subscriber(app: &TestApp) -> ConfirmationLinks {
         .unwrap();
 
     let email_request = &app.email_server.received_requests().await.unwrap()[0];
-    app.get_confirmation_links(&email_request)
+    app.get_confirmation_links(email_request)
 }
 
 /// Use the public API of the application under test to create

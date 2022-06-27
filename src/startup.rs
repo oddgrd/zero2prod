@@ -14,7 +14,8 @@ use tracing_actix_web::TracingLogger;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
 use crate::routes::{
-    admin_dashboard, confirm, health_check, home, login, login_form, publish_newsletter, subscribe,
+    admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out,
+    login, login_form, publish_newsletter, subscribe,
 };
 
 // A new type to hold the newly built server and its port
@@ -73,8 +74,6 @@ async fn run(
     hmac_secret: Secret<String>,
     redis_uri: Secret<String>,
 ) -> Result<Server, anyhow::Error> {
-    // Wrap db_pool and email_client in actix_web::web::Data (an Arc pointer)
-    // and pass a pointer to app_data every time we need to build an App
     let db_pool = web::Data::new(db_pool);
     let email_client = web::Data::new(email_client);
     let base_url = web::Data::new(ApplicationBaseUrl(base_url));
@@ -99,6 +98,9 @@ async fn run(
             .service(login_form)
             .service(login)
             .service(admin_dashboard)
+            .service(change_password_form)
+            .service(change_password)
+            .service(log_out)
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
