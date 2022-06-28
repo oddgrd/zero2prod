@@ -5,17 +5,19 @@ use actix_web::dev::Server;
 use actix_web::{web, App, HttpServer, Result};
 use actix_web_flash_messages::storage::CookieMessageStore;
 use actix_web_flash_messages::FlashMessagesFramework;
+use actix_web_lab::middleware::from_fn;
 use secrecy::{ExposeSecret, Secret};
 use sqlx::postgres::PgPoolOptions;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
+use crate::authentication::reject_anonymous_users;
 use crate::configuration::{DatabaseSettings, Settings};
 use crate::email_client::EmailClient;
 use crate::routes::{
     admin_dashboard, change_password, change_password_form, confirm, health_check, home, log_out,
-    login, login_form, publish_newsletter, subscribe,
+    login, login_form, newsletter_form, publish_newsletter, subscribe,
 };
 
 // A new type to hold the newly built server and its port
@@ -93,14 +95,19 @@ async fn run(
             .service(health_check)
             .service(subscribe)
             .service(confirm)
-            .service(publish_newsletter)
             .service(home)
             .service(login_form)
             .service(login)
-            .service(admin_dashboard)
-            .service(change_password_form)
-            .service(change_password)
-            .service(log_out)
+            .service(
+                web::scope("/admin")
+                    .wrap(from_fn(reject_anonymous_users))
+                    .service(admin_dashboard)
+                    .service(publish_newsletter)
+                    .service(newsletter_form)
+                    .service(change_password_form)
+                    .service(change_password)
+                    .service(log_out),
+            )
             .app_data(db_pool.clone())
             .app_data(email_client.clone())
             .app_data(base_url.clone())
