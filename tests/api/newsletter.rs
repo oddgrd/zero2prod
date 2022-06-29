@@ -18,13 +18,11 @@ async fn you_must_be_logged_in_to_send_newsletter_issues() {
     let app = spawn_app().await;
 
     let body = serde_json::json!({
-    "title": "Newsletter title",
-    "content": {
-    "text": "Newsletter body as plain text",
-    "html": "<p>Newsletter body as HTML</p>",
-    }
+        "title": "Newsletter title",
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
     });
-    let response = app.post_newsletters(body).await;
+    let response = app.post_newsletters(&body).await;
 
     // Assert
     assert_is_redirect_to(&response, "/login");
@@ -34,19 +32,13 @@ async fn you_must_be_logged_in_to_send_newsletter_issues() {
 async fn newsletter_returns_400_for_invalid_data() {
     let app = spawn_app().await;
 
-    app.post_login(&serde_json::json!({
-    "username": &app.test_user.username,
-    "password": &app.test_user.password
-    }))
-    .await;
+    app.test_user.login(&app).await;
 
     let test_cases = vec![
         (
             serde_json::json!({
-            "content": {
-                "text": "Newsletter body as plain text",
-                "html": "<p>Newsletter body as HTML</p>",
-            }
+                "text_content": "Newsletter body as plain text",
+                "html_content": "<p>Newsletter body as HTML</p>",
             }),
             "missing title",
         ),
@@ -57,7 +49,7 @@ async fn newsletter_returns_400_for_invalid_data() {
     ];
 
     for (invalid_body, error_message) in test_cases {
-        let response = app.post_newsletters(invalid_body).await;
+        let response = app.post_newsletters(&invalid_body).await;
 
         assert_eq!(
             response.status().as_u16(),
@@ -73,11 +65,7 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
     let app = spawn_app().await;
     create_unconfirmed_subscriber(&app).await;
 
-    app.post_login(&serde_json::json!({
-    "username": &app.test_user.username,
-    "password": &app.test_user.password
-    }))
-    .await;
+    app.test_user.login(&app).await;
 
     Mock::given(any())
         .respond_with(ResponseTemplate::new(200))
@@ -88,14 +76,16 @@ async fn newsletters_are_not_delivered_to_unconfirmed_subscribers() {
 
     let newsletter_request_body = serde_json::json!({
         "title": "Newsletter title",
-        "content": {
-            "text": "Newsletter body as plain text",
-            "html": "<p>Newsletter body as HTML</p>",
-        }
-    });
-    let response = app.post_newsletters(newsletter_request_body).await;
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
 
-    assert_eq!(response.status().as_u16(), 200);
+    });
+    let response = app.post_newsletters(&newsletter_request_body).await;
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Act - Part 2 - Follow the redirect
+    let html_page = app.get_newsletter_form_html().await;
+    assert!(html_page.contains("<p><i>The newsletter issue has been published!</i></p>"));
 }
 
 #[tokio::test]
@@ -103,11 +93,7 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
     let app = spawn_app().await;
     create_confirmed_subscriber(&app).await;
 
-    app.post_login(&serde_json::json!({
-    "username": &app.test_user.username,
-    "password": &app.test_user.password
-    }))
-    .await;
+    app.test_user.login(&app).await;
 
     Mock::given(path("/email"))
         .and(method("POST"))
@@ -118,14 +104,19 @@ async fn newsletters_are_delivered_to_confirmed_subscribers() {
 
     let newsletter_request_body = serde_json::json!({
         "title": "Newsletter title",
-        "content": {
-            "text": "Newsletter body as plain text",
-            "html": "<p>Newsletter body as HTML</p>",
-        }
-    });
-    let response = app.post_newsletters(newsletter_request_body).await;
+        "text_content": "Newsletter body as plain text",
+        "html_content": "<p>Newsletter body as HTML</p>",
 
-    assert_eq!(response.status().as_u16(), 200);
+    });
+    let response = app.post_newsletters(&newsletter_request_body).await;
+
+    // Redirected to newsletter form
+    assert_is_redirect_to(&response, "/admin/newsletters");
+
+    // Check newsletter form flash message
+    let html_page = app.get_newsletter_form_html().await;
+    assert!(html_page.contains("<p><i>The newsletter issue has been published!</i></p>"));
+
     // Mock verifies on Drop that we have sent the newsletter email
 }
 

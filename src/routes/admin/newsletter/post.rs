@@ -1,8 +1,9 @@
-use crate::authentication::UserId;
 use crate::domain::SubscriberEmail;
 use crate::email_client::EmailClient;
 use crate::utils::e500;
+use crate::{authentication::UserId, utils::see_other};
 use actix_web::{post, web, HttpResponse};
+use actix_web_flash_messages::FlashMessage;
 use anyhow::Context;
 use serde::Deserialize;
 use sqlx::PgPool;
@@ -21,7 +22,7 @@ use sqlx::PgPool;
 //             PublishError::UnexpectedError(_) => {
 //                 HttpResponse::new(StatusCode::INTERNAL_SERVER_ERROR)
 //             }
-//             PublishError::AuthError(_) => {
+//        &     PublishError::&AuthError(_) => {
 //                 let mut response = HttpResponse::new(StatusCode::UNAUTHORIZED);
 //                 let header_value = HeaderValue::from_str(r#"Basic realm="publish""#).unwrap();
 //                 response
@@ -42,23 +43,23 @@ use sqlx::PgPool;
 // }
 
 #[derive(Deserialize)]
-struct Content {
-    text: String,
-    html: String,
-}
-#[derive(Deserialize)]
-pub struct BodyData {
+pub struct FormData {
     title: String,
-    content: Content,
+    text_content: String,
+    html_content: String,
 }
 
-#[tracing::instrument(name = "Publishing newsletter", skip(pool, email_client, body, _user_id), fields(username=tracing::field::Empty, user_id=tracing::field::Empty))]
+#[tracing::instrument(
+    name = "Publishing newsletter",
+    skip(pool, email_client, form, user_id),
+    fields(user_id=%*user_id)
+)]
 #[post("/newsletters")]
 pub async fn publish_newsletter(
     pool: web::Data<PgPool>,
     email_client: web::Data<EmailClient>,
-    body: web::Json<BodyData>,
-    _user_id: web::ReqData<UserId>,
+    form: web::Form<FormData>,
+    user_id: web::ReqData<UserId>,
 ) -> Result<HttpResponse, actix_web::Error> {
     let confirmed_subscribers = get_confirmed_subscribers(&pool).await.map_err(e500)?;
 
@@ -68,9 +69,9 @@ pub async fn publish_newsletter(
                 email_client
                     .send_email(
                         &subscriber.email,
-                        &body.title,
-                        &body.content.html,
-                        &body.content.text,
+                        &form.title,
+                        &form.text_content,
+                        &form.html_content,
                     )
                     .await
                     .with_context(|| {
@@ -83,6 +84,7 @@ pub async fn publish_newsletter(
                 // We record the error chain as a structured field
                 // on the log record.
                 error.cause_chain = ?error,
+                error.message = %error,
                 // Using `\` to split a long string literal over
                 // two lines, without creating a `\n` character.
                 "Skipping a confirmed subscriber. \
@@ -91,7 +93,8 @@ pub async fn publish_newsletter(
             }
         }
     }
-    Ok(HttpResponse::Ok().finish())
+    FlashMessage::info("The newsletter issue has been published!").send();
+    Ok(see_other("/admin/newsletters"))
 }
 
 #[derive(Debug)]
