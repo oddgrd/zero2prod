@@ -226,9 +226,9 @@ dependencies = [
 
 [[package]]
 name = "actix-web-flash-messages"
-version = "0.3.2"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38638194ec50d30af790d6a5472c16f2c62f08259ad1166e2de2a4411a5a2515"
+checksum = "05c89d051c33e7044e8a6e811ed06dda6ce65dfb51a1e379146f723116ca362a"
 dependencies = [
  "actix-web",
  "anyhow",
@@ -2662,7 +2662,7 @@ dependencies = [
  "thiserror",
  "tokio-stream",
  "url",
- "uuid 1.1.2",
+ "uuid",
  "webpki-roots",
  "whoami",
 ]
@@ -3031,15 +3031,15 @@ dependencies = [
 
 [[package]]
 name = "tracing-actix-web"
-version = "0.5.1"
+version = "0.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99bcebac55fba44eadf75a424ee403e756f9165596a613d125876388e5fb4c34"
+checksum = "f0b2cd6e5074ff67679a0ff68bc6333be78d29910ba7cd295d948aa5ff152032"
 dependencies = [
  "actix-web",
  "pin-project",
  "tracing",
  "tracing-futures",
- "uuid 0.8.2",
+ "uuid",
 ]
 
 [[package]]
@@ -3210,15 +3210,6 @@ dependencies = [
 
 [[package]]
 name = "uuid"
-version = "0.8.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bc5cf98d8186244414c848017f0e2676b3fcb46807f6668a97dfe67359a3c4b7"
-dependencies = [
- "getrandom 0.2.5",
-]
-
-[[package]]
-name = "uuid"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd6469f4314d5f1ffec476e05f17cc9a78bc7a27a6a857842170bdf8d6f98d2f"
@@ -3229,9 +3220,9 @@ dependencies = [
 
 [[package]]
 name = "validator"
-version = "0.14.0"
+version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6d0f08911ab0fee2c5009580f04615fa868898ee57de10692a45da0c3bcc3e5e"
+checksum = "f07b0a1390e01c0fc35ebb26b28ced33c9a3808f7f9fbe94d3cc01e233bfeed5"
 dependencies = [
  "idna",
  "lazy_static",
@@ -3240,17 +3231,6 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "url",
- "validator_types",
-]
-
-[[package]]
-name = "validator_types"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ded9d97e1d42327632f5f3bae6403c04886e2de3036261ef42deebd931a6a291"
-dependencies = [
- "proc-macro2",
- "syn",
 ]
 
 [[package]]
@@ -3582,6 +3562,7 @@ dependencies = [
  "serde",
  "serde-aux",
  "serde_json",
+ "serde_urlencoded",
  "sqlx",
  "thiserror",
  "tokio",
@@ -3591,7 +3572,7 @@ dependencies = [
  "tracing-log",
  "tracing-subscriber",
  "unicode-segmentation",
- "uuid 1.1.2",
+ "uuid",
  "validator",
  "wiremock",
 ]
